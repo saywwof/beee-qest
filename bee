@@ -1,0 +1,143 @@
+index.html 
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bee Quest</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #87CEEB; /* Небо */
+        }
+        canvas {
+            display: block;
+            margin: auto;
+            background-color: #A3D98D; /* Трава */
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="800" height="400"></canvas>
+    <script src="game.js"></script>
+</body>
+</html>
+
+
+
+
+
+game.js
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+let beeImage = new Image();
+beeImage.src = 'https://avatanplus.com/files/resources/mid/56745fe7c72e4151b696a188.png'; // Пчела
+
+let nectarImage = new Image();
+nectarImage.src = 'https://upload.wikimedia.org/wikipedia/commons/d/dd/Euphorbia_enopla5_ies.jpg'; // Нектар
+
+let hiveImage = new Image();
+hiveImage.src = 'https://static.tildacdn.com/tild3731-6161-4039-a231-636466383566/1421240171_uley.jpg'; // Улей
+
+let bee = {
+    x: 50,
+    y: 300,
+    width: 50,
+    height: 30,
+    speed: 5,
+    collectedNectar: false,
+    draw() {
+        ctx.drawImage(beeImage, this.x, this.y, this.width, this.height);
+    },
+    move(directionX, directionY) {
+        this.x += directionX * this.speed;
+        this.y += directionY * this.speed;
+
+        // Ограничиваем движение в пределах канваса
+        if (this.x < 0) this.x = 0;
+        if (this.x + this.width > canvas.width) this.x = canvas.width - this.width;
+        if (this.y < 0) this.y = 0; // Ограничиваем верхнюю границу
+        if (this.y + this.height > canvas.height) this.y = canvas.height - this.height; // Ограничиваем нижнюю границу
+    }
+};
+
+let nectar = {
+    x: 700,
+    y: Math.random() * (canvas.height - 30),
+    width: 30,
+    height: 30,
+    collected: false,
+    draw() {
+        if (!this.collected) {
+            ctx.drawImage(nectarImage, this.x, this.y, this.width, this.height);
+        }
+    }
+};
+
+let hive = {
+    x: 750,
+    y: 50,
+    width: 50,
+    height: 50,
+    draw() {
+        ctx.drawImage(hiveImage, this.x, this.y, this.width, this.height);
+    }
+};
+
+function checkCollision() {
+    if (
+        bee.x < nectar.x + nectar.width &&
+        bee.x + bee.width > nectar.x &&
+        bee.y < nectar.y + nectar.height &&
+        bee.y + bee.height > nectar.y
+    ) {
+        nectar.collected = true;
+        bee.collectedNectar = true; // Отметим, что пчела собрала нектар
+    }
+    
+    if (
+        bee.x < hive.x + hive.width &&
+        bee.x + bee.width > hive.x &&
+        bee.y < hive.y + hive.height &&
+        bee.y + bee.height > hive.y
+    ) {
+        alert("Вы достигли улья! Поздравляем!");
+        document.location.reload();
+    }
+}
+
+function gameLoop() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    bee.draw();
+    nectar.draw();
+    hive.draw();
+    
+    checkCollision();
+    
+    requestAnimationFrame(gameLoop);
+}
+
+// Обработчик нажатий клавиш
+document.addEventListener('keydown', function(event) {
+    let directionX = 0;
+    let directionY = 0;
+
+    if (event.code === 'ArrowRight') {
+        directionX = 1; // Движение вправо
+    } else if (event.code === 'ArrowLeft') {
+        directionX = -1; // Движение влево
+    }
+    
+    if (event.code === 'ArrowUp') {
+        directionY = -1; // Движение вверх
+    } else if (event.code === 'ArrowDown') {
+        directionY = 1; // Движение вниз
+    }
+
+    bee.move(directionX, directionY);
+});
+
+gameLoop();
